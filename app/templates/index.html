@@ -1,0 +1,735 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>结算单转内控结算表</title>
+    <style>
+      :root {
+        --bg: #f7f9fc;
+        --card: #ffffff;
+        --text: #0f172a;
+        --muted: #475569;
+        --muted2: #64748b;
+        --border: #e2e8f0;
+        --border2: #cbd5e1;
+        --accent: #2563eb;
+        --accentText: #ffffff;
+        --dangerBg: #fff1f2;
+        --dangerBorder: #fecaca;
+        --dangerText: #9f1239;
+        --successBg: #ecfdf5;
+        --successBorder: #a7f3d0;
+        --successText: #065f46;
+        --shadow: 0 18px 60px rgba(15, 23, 42, 0.12);
+      }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+          "Noto Sans CJK SC", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+      .wrap {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 48px 20px 64px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: var(--shadow);
+      }
+      h1 {
+        font-size: 28px;
+        margin: 0 0 6px 0;
+      }
+      p {
+        margin: 0 0 18px 0;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+      .subtitle {
+        color: var(--muted);
+        margin-bottom: 18px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      @media (max-width: 720px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      label {
+        display: block;
+        font-size: 13px;
+        color: #334155;
+        font-weight: 600;
+        margin: 10px 0 6px 0;
+      }
+      input[type="file"],
+      input[type="text"],
+      select {
+        width: 100%;
+        box-sizing: border-box;
+        background: #ffffff;
+        border: 1px solid var(--border2);
+        border-radius: 12px;
+        color: var(--text);
+        padding: 10px 12px;
+        outline: none;
+        height: 44px;
+      }
+      input[type="file"] {
+        padding: 10px;
+      }
+      input::placeholder {
+        color: #94a3b8;
+      }
+      select {
+        background: #f1f5f9;
+      }
+      .hint {
+        margin-top: 8px;
+        margin-bottom: 0;
+        font-size: 12px;
+        color: var(--muted2);
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        border: 1px solid #bae6fd;
+        background: #e0f2fe;
+        color: #075985;
+        white-space: nowrap;
+      }
+      .pill.warn {
+        border: 1px solid #fed7aa;
+        background: #fff7ed;
+        color: #9a3412;
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .row > *:first-child {
+        flex: 1;
+      }
+      .section {
+        margin-top: 12px;
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: #f8fafc;
+      }
+      .section-title {
+        margin: 0 0 6px 0;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text);
+      }
+      .section-text {
+        margin: 0;
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+      .actions {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-top: 16px;
+      }
+      button {
+        appearance: none;
+        border: 0;
+        cursor: pointer;
+        background: var(--accent);
+        color: var(--accentText);
+        font-weight: 700;
+        padding: 10px 14px;
+        border-radius: 12px;
+        height: 44px;
+      }
+      button.secondary {
+        background: #ffffff;
+        color: var(--text);
+        border: 1px solid var(--border2);
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .status {
+        font-size: 13px;
+        color: var(--muted2);
+      }
+      .error {
+        margin-top: 14px;
+        padding: 12px 12px;
+        border-radius: 12px;
+        border: 1px solid var(--dangerBorder);
+        background: var(--dangerBg);
+        color: var(--dangerText);
+        display: none;
+        white-space: pre-wrap;
+      }
+      .success {
+        margin-top: 14px;
+        padding: 12px 12px;
+        border-radius: 12px;
+        border: 1px solid var(--successBorder);
+        background: var(--successBg);
+        color: var(--successText);
+        display: none;
+        white-space: pre-wrap;
+      }
+      .parse-debug-section {
+        margin-top: 18px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border);
+      }
+      .parse-debug-section .row-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        margin-top: 8px;
+      }
+      .parse-debug-section .row-actions input[type="text"] {
+        max-width: 280px;
+        flex: 1;
+        min-width: 120px;
+      }
+      #parse_debug_panel {
+        display: none;
+        margin-top: 12px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border2);
+        background: #0f172a;
+        color: #e2e8f0;
+        font-size: 12px;
+        line-height: 1.45;
+        max-height: 480px;
+        overflow: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .preview-section {
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border);
+      }
+      .preview-tbl {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        background: #fff;
+        border: 1px solid var(--border2);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .preview-tbl th,
+      .preview-tbl td {
+        border: 1px solid var(--border);
+        padding: 8px 10px;
+        text-align: left;
+      }
+      .preview-tbl th {
+        background: #f1f5f9;
+        font-weight: 700;
+        color: #334155;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+      }
+      .preview-tbl tbody tr:nth-child(even) {
+        background: #f8fafc;
+      }
+      .preview-tbl td.num {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      #preview_wrap {
+        border-radius: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="card">
+        <h1>结算单转内控结算表</h1>
+        <p class="subtitle">上传客户结算表与员工工号关联表，选择客户项目后生成统一格式的内控结算表（Excel）。</p>
+
+        <form id="form" class="grid">
+          <div style="grid-column: 1 / -1">
+            <label>客户项目</label>
+            <div class="row">
+              <select id="client_id" name="client_id">
+                <option value="auto" selected>自动识别（推荐）</option>
+                {% for c in clients %}
+                  <option value="{{ c.client_id }}">{{ c.display_name }}</option>
+                {% endfor %}
+              </select>
+              <div id="detected_pill" class="pill warn" style="display: none"></div>
+            </div>
+            <p id="client_hint" class="hint">若自动识别失败或命中多个规则，请在此手动选择。</p>
+
+            <div class="section">
+              <div class="section-title">规则配置</div>
+              <p class="section-text">规则不在页面里编辑：服务端启动时读取 <code>app/client_rules/rules/*.json</code>。页面只负责选择/自动识别客户项目。</p>
+              <p class="section-text" style="margin-top: 6px">自动识别依据：文件名命中规则里的 <code>filename_patterns</code>；sheet/列名映射也来自该配置。</p>
+            </div>
+          </div>
+          <div>
+            <label>客户结算表（Excel）</label>
+            <input id="client_file" name="client_file" type="file" accept=".xlsx,.xls" required />
+            <label>客户结算表文件名（可选）</label>
+            <input id="client_filename" name="client_filename" type="text" placeholder="例如：客户结算单_2025年04月.xlsx" />
+          </div>
+
+          <div>
+            <label>员工工号关联表（Excel）</label>
+            <input id="mapping_file" name="mapping_file" type="file" accept=".xlsx,.xls" required />
+            <label>员工工号关联表文件名（可选）</label>
+            <input id="mapping_filename" name="mapping_filename" type="text" placeholder="例如：员工工号关联表.xlsx" />
+          </div>
+
+          <div style="grid-column: 1 / -1">
+            <label>下载文件名（可选）</label>
+            <input id="out_filename" name="out_filename" type="text" placeholder="例如：德赛_2026年1月结算内控表.xlsx" />
+            <p class="hint">不填写时默认：客户项目 + 年月 + 结算内控表。</p>
+          </div>
+        </form>
+
+        <div class="actions">
+          <button id="submit" type="button">生成并下载</button>
+          <button id="clear" class="secondary" type="button">清空</button>
+          <div id="status" class="status">等待上传文件。</div>
+        </div>
+
+        <div class="parse-debug-section">
+          <div class="section-title" style="margin: 0 0 4px 0">解析快照（核对某行读到的单元格）</div>
+          <p class="hint" style="margin: 0 0 8px 0">
+            行号为<strong>去掉表头后的数据表</strong>从 1 开始计数，一般<strong>不等于</strong> Excel 左侧行号；若要对齐 Excel 第 31 行，可先试 28～32
+            等相邻数字。
+          </p>
+          <label for="parse_debug_rows">数据行号（可多行，英文逗号分隔）</label>
+          <div class="row-actions">
+            <input
+              id="parse_debug_rows"
+              name="parse_debug_rows"
+              type="text"
+              placeholder="例如：31 或 30,31,32"
+              autocomplete="off"
+            />
+            <button id="btn_parse_debug" type="button" class="secondary">查看行解析</button>
+          </div>
+          <pre id="parse_debug_panel"></pre>
+        </div>
+
+        <div class="preview-section">
+          <div class="section-title" style="margin: 0 0 4px 0">解析结果全表（五列）</div>
+          <p class="hint" style="margin: 0 0 8px 0">
+            与生成内控表使用<strong>同一套解析规则</strong>，仅上传客户结算表即可刷新；列为：姓名、月份、正常工时、加班工时、小时单价（含税）。
+          </p>
+          <div class="row-actions">
+            <button id="btn_preview_table" type="button" class="secondary">刷新解析预览表</button>
+            <span id="preview_count" class="status"></span>
+          </div>
+          <p id="preview_meta" class="hint" style="display: none; margin-top: 8px; font-size: 12px; word-break: break-word"></p>
+          <div id="preview_wrap" style="display: none">
+            <table class="preview-tbl" id="preview_table">
+              <thead>
+                <tr>
+                  <th>姓名</th>
+                  <th>月份</th>
+                  <th>正常工时</th>
+                  <th>加班工时</th>
+                  <th>小时单价（含税）</th>
+                </tr>
+              </thead>
+              <tbody id="preview_tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="success" class="success"></div>
+        <div id="error" class="error"></div>
+      </div>
+    </div>
+
+    <script>
+      const form = document.getElementById("form");
+      const clientFile = document.getElementById("client_file");
+      const mappingFile = document.getElementById("mapping_file");
+      const clientFilename = document.getElementById("client_filename");
+      const mappingFilename = document.getElementById("mapping_filename");
+      const clientId = document.getElementById("client_id");
+      const submitBtn = document.getElementById("submit");
+      const clearBtn = document.getElementById("clear");
+      const statusEl = document.getElementById("status");
+      const successEl = document.getElementById("success");
+      const errorEl = document.getElementById("error");
+      const detectedPill = document.getElementById("detected_pill");
+      const clientHint = document.getElementById("client_hint");
+      const outFilename = document.getElementById("out_filename");
+      const parseDebugRows = document.getElementById("parse_debug_rows");
+      const parseDebugPanel = document.getElementById("parse_debug_panel");
+      const btnParseDebug = document.getElementById("btn_parse_debug");
+      const btnPreviewTable = document.getElementById("btn_preview_table");
+      const previewWrap = document.getElementById("preview_wrap");
+      const previewTbody = document.getElementById("preview_tbody");
+      const previewCount = document.getElementById("preview_count");
+      const previewMeta = document.getElementById("preview_meta");
+
+      let clientFilenameTouched = false;
+      let mappingFilenameTouched = false;
+
+      function setError(msg) {
+        if (!msg) {
+          errorEl.style.display = "none";
+          errorEl.textContent = "";
+          return;
+        }
+        errorEl.style.display = "block";
+        errorEl.textContent = msg;
+      }
+
+      function setSuccess(msg) {
+        if (!msg) {
+          successEl.style.display = "none";
+          successEl.textContent = "";
+          return;
+        }
+        successEl.style.display = "block";
+        successEl.textContent = msg;
+      }
+
+      function hideParseDebugPanel() {
+        parseDebugPanel.style.display = "none";
+        parseDebugPanel.textContent = "";
+      }
+
+      function hidePreviewTable() {
+        previewWrap.style.display = "none";
+        previewTbody.innerHTML = "";
+        previewCount.textContent = "";
+        if (previewMeta) {
+          previewMeta.textContent = "";
+          previewMeta.style.display = "none";
+        }
+      }
+
+      function fmtNum(x) {
+        const n = Number(x);
+        if (!Number.isFinite(n)) return "0";
+        return String(Math.round(n * 100) / 100);
+      }
+
+      async function loadPreviewTable() {
+        if (!clientFile.files[0]) {
+          setError("请先选择客户结算表，再刷新解析预览表。");
+          hidePreviewTable();
+          return;
+        }
+        const fd = new FormData();
+        fd.append("client_file", clientFile.files[0]);
+        fd.append("client_filename", clientFilename.value || clientFile.files[0].name);
+        fd.append("client_id", clientId.value || "auto");
+        const resp = await fetch("/api/preview/settlement-table", { method: "POST", body: fd });
+        const text = await resp.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          throw new Error(text || `HTTP ${resp.status}`);
+        }
+        if (!resp.ok || !data.ok) {
+          throw new Error(data.error || text || `HTTP ${resp.status}`);
+        }
+        const rows = data.rows || [];
+        previewTbody.innerHTML = "";
+        for (const row of rows) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${escapeHtml(String(row.name ?? ""))}</td>
+            <td>${escapeHtml(String(row.month ?? ""))}</td>
+            <td class="num">${escapeHtml(fmtNum(row.normal_hours))}</td>
+            <td class="num">${escapeHtml(fmtNum(row.overtime_hours))}</td>
+            <td class="num">${escapeHtml(fmtNum(row.hourly_price_tax))}</td>
+          `;
+          previewTbody.appendChild(tr);
+        }
+        previewCount.textContent = `共 ${rows.length} 人·月行（client: ${escapeHtml(String(data.client_id || ""))}）`;
+        if (previewMeta && data.parse_debug) {
+          const d = data.parse_debug;
+          const mode = d.flyme_dual_row_branch ? "Flyme「类型+工时」双行" : "垂直两行（统计工时）或其它";
+          const cols = d.picked_columns ? JSON.stringify(d.picked_columns) : "";
+          previewMeta.textContent = `解析：${mode}；sheet「${d.settlement_sheet || ""}」；表体 ${d.settlement_body_row_count ?? ""} 行；识别列 ${cols}`;
+          previewMeta.style.display = "block";
+        } else if (previewMeta) {
+          previewMeta.style.display = "none";
+        }
+        previewWrap.style.display = "block";
+      }
+
+      function escapeHtml(s) {
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function showParseDebugJson(obj) {
+        parseDebugPanel.textContent = JSON.stringify(obj, null, 2);
+        parseDebugPanel.style.display = "block";
+      }
+
+      /** 仅上传客户表即可；不需员工映射表。rows 为 data_rows 表单字段（默认服务端 31）。 */
+      async function runParseDebug(rowsOverride) {
+        if (!clientFile.files[0]) {
+          setError("请先选择客户结算表，再查看行解析。");
+          hideParseDebugPanel();
+          return;
+        }
+        let rows;
+        if (rowsOverride !== undefined && rowsOverride !== null && String(rowsOverride).trim() !== "") {
+          rows = String(rowsOverride).trim();
+        } else {
+          rows = (parseDebugRows.value || "").trim() || "31";
+        }
+        const fd = new FormData();
+        fd.append("client_file", clientFile.files[0]);
+        fd.append("client_filename", clientFilename.value || clientFile.files[0].name);
+        fd.append("client_id", clientId.value || "auto");
+        fd.append("data_rows", rows);
+        const resp = await fetch("/api/debug/settlement-rows", { method: "POST", body: fd });
+        const text = await resp.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          throw new Error(text || `HTTP ${resp.status}`);
+        }
+        if (!resp.ok) {
+          throw new Error(data.error || text || `HTTP ${resp.status}`);
+        }
+        showParseDebugJson(data);
+      }
+
+      btnPreviewTable.addEventListener("click", async () => {
+        setError("");
+        btnPreviewTable.disabled = true;
+        statusEl.textContent = "正在加载解析预览表…";
+        try {
+          await loadPreviewTable();
+          statusEl.textContent = "解析预览表已更新。";
+        } catch (e) {
+          hidePreviewTable();
+          setError(String(e && e.message ? e.message : e));
+          statusEl.textContent = "解析预览表加载失败。";
+        } finally {
+          btnPreviewTable.disabled = false;
+        }
+      });
+
+      btnParseDebug.addEventListener("click", async () => {
+        setError("");
+        btnParseDebug.disabled = true;
+        statusEl.textContent = "正在拉取解析快照…";
+        try {
+          await runParseDebug();
+          statusEl.textContent = "解析快照已显示在下方。";
+        } catch (e) {
+          hideParseDebugPanel();
+          setError(String(e && e.message ? e.message : e));
+          statusEl.textContent = "解析快照获取失败。";
+        } finally {
+          btnParseDebug.disabled = false;
+        }
+      });
+
+      function syncNames() {
+        // If user hasn't manually edited the filename input, keep it in sync with file selection.
+        if (clientFile.files && clientFile.files[0] && !clientFilenameTouched) {
+          clientFilename.value = clientFile.files[0].name;
+        }
+        if (mappingFile.files && mappingFile.files[0] && !mappingFilenameTouched) {
+          mappingFilename.value = mappingFile.files[0].name;
+        }
+      }
+
+      function setDetected({ ok, display_name, client_id, message }) {
+        if (!clientId.value || clientId.value === "auto") {
+          if (ok) {
+            detectedPill.style.display = "inline-flex";
+            detectedPill.className = "pill";
+            detectedPill.textContent = `已识别：${display_name || client_id}`;
+            clientHint.textContent = "已自动识别客户项目；如不正确可手动切换。";
+          } else {
+            detectedPill.style.display = "inline-flex";
+            detectedPill.className = "pill warn";
+            detectedPill.textContent = "未识别";
+            clientHint.textContent = message || "无法自动识别，请手动选择客户项目。";
+          }
+          return;
+        }
+        // manual override selected
+        detectedPill.style.display = "inline-flex";
+        detectedPill.className = "pill";
+        detectedPill.textContent = "手动选择";
+        clientHint.textContent = "已手动选择客户项目；将忽略自动识别。";
+      }
+
+      async function detectClient() {
+        try {
+          const name = (clientFilename.value || (clientFile.files && clientFile.files[0] && clientFile.files[0].name) || "").trim();
+          if (!name) {
+            detectedPill.style.display = "none";
+            clientHint.textContent = "若自动识别失败或命中多个规则，请在此手动选择。";
+            return;
+          }
+          if (clientId.value && clientId.value !== "auto") {
+            setDetected({ ok: true, display_name: "", client_id: "", message: "" });
+            return;
+          }
+          const fd = new FormData();
+          fd.append("client_filename", name);
+          const resp = await fetch("/api/detect-client", { method: "POST", body: fd });
+          const data = await resp.json();
+          setDetected(data || { ok: false, message: "无法自动识别，请手动选择客户项目。" });
+        } catch (e) {
+          setDetected({ ok: false, message: "自动识别失败，请手动选择客户项目。" });
+        }
+      }
+
+      clientFile.addEventListener("change", () => {
+        syncNames();
+        statusEl.textContent = "客户结算表已选择。";
+        setSuccess("");
+        setError("");
+        detectClient();
+      });
+      mappingFile.addEventListener("change", () => {
+        syncNames();
+        statusEl.textContent = "员工工号关联表已选择。";
+        setSuccess("");
+        setError("");
+      });
+      clientFilename.addEventListener("input", () => {
+        clientFilenameTouched = true;
+        detectClient();
+      });
+      mappingFilename.addEventListener("input", () => {
+        mappingFilenameTouched = true;
+      });
+      clientId.addEventListener("change", () => {
+        detectClient();
+      });
+
+      clearBtn.addEventListener("click", () => {
+        form.reset();
+        hideParseDebugPanel();
+        hidePreviewTable();
+        statusEl.textContent = "已清空。等待上传文件。";
+        setSuccess("");
+        setError("");
+        detectedPill.style.display = "none";
+        clientHint.textContent = "若自动识别失败或命中多个规则，请在此手动选择。";
+        clientFilenameTouched = false;
+        mappingFilenameTouched = false;
+      });
+
+      submitBtn.addEventListener("click", async () => {
+        setError("");
+        setSuccess("");
+        if (!clientFile.files[0] || !mappingFile.files[0]) {
+          setError("请先选择两个 Excel 文件。");
+          return;
+        }
+
+        submitBtn.disabled = true;
+        clearBtn.disabled = true;
+        statusEl.textContent = "正在生成，请稍候…";
+
+        try {
+          const fd = new FormData();
+          fd.append("client_file", clientFile.files[0]);
+          fd.append("mapping_file", mappingFile.files[0]);
+          fd.append("client_filename", clientFilename.value || clientFile.files[0].name);
+          fd.append("mapping_filename", mappingFilename.value || mappingFile.files[0].name);
+          fd.append("client_id", clientId.value || "auto");
+          fd.append("out_filename", (outFilename && outFilename.value) || "");
+
+          const resp = await fetch("/api/convert", { method: "POST", body: fd });
+          if (!resp.ok) {
+            const text = await resp.text();
+            throw new Error(text || `HTTP ${resp.status}`);
+          }
+
+          const blob = await resp.blob();
+          const cd = resp.headers.get("content-disposition") || "";
+          const xname = resp.headers.get("x-output-filename") || "";
+          const match = cd.match(/filename\\*=UTF-8''([^;]+)|filename=\"?([^\";]+)\"?/i);
+          const preferred = xname || (match && (match[1] || match[2])) || "";
+          const filename = decodeURIComponent(preferred || "内控结算表.xlsx");
+
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          // Prefer user input name if provided, then server suggested name.
+          a.download = (outFilename && outFilename.value && outFilename.value.trim()) ? ((outFilename.value.trim().toLowerCase().endsWith('.xlsx') ? outFilename.value.trim() : outFilename.value.trim() + '.xlsx')) : filename;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+
+          statusEl.textContent = "已生成并下载。";
+          setSuccess("已生成：内控结算表已开始下载。");
+
+          const dbgRows = (parseDebugRows.value || "").trim();
+          if (dbgRows) {
+            try {
+              statusEl.textContent = "已下载。正在加载解析快照…";
+              await runParseDebug(dbgRows);
+              statusEl.textContent = "已下载；解析快照见下方。";
+            } catch (e) {
+              setError("解析快照加载失败：" + String(e && e.message ? e.message : e));
+              statusEl.textContent = "已下载；解析快照未显示（见上方错误）。";
+            }
+          }
+          try {
+            statusEl.textContent = "已下载。正在刷新解析预览表…";
+            await loadPreviewTable();
+            statusEl.textContent = "已下载；下方为解析结果五列表。";
+          } catch (e) {
+            setError((errorEl.textContent ? errorEl.textContent + "\n" : "") + "解析预览表：" + String(e && e.message ? e.message : e));
+            statusEl.textContent = "已下载；解析预览表未更新（见错误）。";
+          }
+        } catch (e) {
+          setError(String(e && e.message ? e.message : e));
+          statusEl.textContent = "生成失败，请查看错误信息。";
+        } finally {
+          submitBtn.disabled = false;
+          clearBtn.disabled = false;
+        }
+      });
+    </script>
+  </body>
+</html>
+

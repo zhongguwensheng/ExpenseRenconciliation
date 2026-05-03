@@ -1,0 +1,25 @@
+{
+  "client_id": "desay",
+  "display_name": "德赛（诚迈-城迈开发对账单）",
+  "filename_patterns": ["德赛", "Desay", "诚迈", "城迈", "对账单"],
+  "ym_from_filename": true,
+  "monthly_price_includes_vat": false,
+  "sheets": {
+    "settlement": ["对账单", "结算", "结算单"],
+    "travel": []
+  },
+  "columns": {
+    "settlement": {
+      "name": ["姓名"],
+      "monthly_price": ["月服务费（不含税）", "月服务费(不含税)", "月服务费（不含税）", "月服务费(不含税)"],
+      "std_days": ["标准出勤（天数）", "标准出勤(天数)", "标准出勤（天数）", "标准出勤(天数)"],
+      "actual_days": ["实际出勤（天数）", "实际出勤(天数)", "实际出勤（天数）", "实际出勤(天数)"],
+      "holiday_days": ["当月法定节假日天数"],
+      "overtime_total": ["加班费汇总（含税6%）", "加班费汇总(含税6%)"],
+      "travel_fee": ["差旅费（含税6%）", "差旅费(含税6%)"],
+      "travel_subsidy": ["差旅补贴（含税6%）", "差旅补贴(含税6%)"]
+    },
+    "travel": {}
+  }
+}
+

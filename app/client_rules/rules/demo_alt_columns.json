@@ -1,0 +1,24 @@
+{
+  "client_id": "demo_alt",
+  "display_name": "示例客户（列名不同）",
+  "filename_patterns": ["DEMO_ALT", "示例客户B"],
+  "sheets": {
+    "settlement": ["结算", "对账"],
+    "travel": ["差旅", "出差"]
+  },
+  "columns": {
+    "settlement": {
+      "name": ["员工姓名", "人员"],
+      "ym": ["结算月份", "月度"],
+      "monthly_price": ["月结算金额", "月结算价"],
+      "actual_days": ["出勤天数", "实际出勤天数"]
+    },
+    "travel": {
+      "name": ["姓名", "出差人"],
+      "ym": ["月份", "出差月份"],
+      "reimburse_total": ["报销金额", "报销合计"],
+      "subsidy_total": ["补贴", "补贴金额"]
+    }
+  }
+}
+
