@@ -76,3 +76,4 @@
 | 日期 | 说明 |
 |------|------|
 | 2026-05-03 | 初版：经问答收敛（识别 A、最少列集、四列映射、差旅独立 Sheet、扩展列不做）。 |
+| 2026-05-03 | 实现：`geely_ito.json` 结算列别名扩展；`Geely_ITO.require_wide_attendance_if_wide_signature` + `parser.py` 调用；`scripts/smoke_test.py` 宽表正/负例。 |

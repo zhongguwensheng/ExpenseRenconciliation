@@ -9,9 +9,9 @@
   "columns": {
     "settlement": {
       "name": ["姓名"],
-      "ym": ["月度"],
-      "monthly_price": ["月结算价"],
-      "actual_days": ["实际出勤天数"]
+      "ym": ["月度", "月份"],
+      "monthly_price": ["月结算价", "岗位结算单价"],
+      "actual_days": ["实际出勤天数", "月度实际出勤天数"]
     },
     "travel": {
       "name": ["出差人"],

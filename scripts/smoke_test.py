@@ -9,6 +9,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from app.services.errors import ConversionError
 from app.services.exporter import export_internal_xlsx
 from app.services.parser import parse_all
 from app.services.transform import build_internal_rows
@@ -32,6 +33,40 @@ def make_client_excel_geely_ito() -> bytes:
     with pd.ExcelWriter(bio, engine="openpyxl") as w:
         settlement.to_excel(w, sheet_name="客户结算单(示例)", index=False)
         travel.to_excel(w, sheet_name="差旅明细-示例", index=False)
+    return bio.getvalue()
+
+
+def make_client_excel_geely_ito_wide_two_row_header() -> bytes:
+    """Two-row header (group row + field names), then one data row — spec 2026-05-03."""
+    rows = [
+        ["基础信息", "", "", ""],
+        ["姓名", "月份", "岗位结算单价", "月度实际出勤天数"],
+        ["张三", "2025-10", 31800, 22],
+    ]
+    df = pd.DataFrame(rows)
+    travel = pd.DataFrame(
+        [
+            {"月份": "10月", "出差人": "张三", "报销合计": "￥100.00", "补贴金额": "￥10.00"},
+        ]
+    )
+    bio = io.BytesIO()
+    with pd.ExcelWriter(bio, engine="openpyxl") as w:
+        df.to_excel(w, sheet_name="客户结算单ITO宽表", header=False, index=False)
+        travel.to_excel(w, sheet_name="差旅明细-示例", index=False)
+    return bio.getvalue()
+
+
+def make_client_excel_geely_ito_wide_missing_attendance() -> bytes:
+    # Header must still satisfy rule alias groups (incl. 实际出勤天数), else locate fails before guard.
+    rows = [
+        ["基础信息", "", "", ""],
+        ["姓名", "月份", "岗位结算单价", "实际出勤天数"],
+        ["张三", "2025-10", 31800, 22],
+    ]
+    df = pd.DataFrame(rows)
+    bio = io.BytesIO()
+    with pd.ExcelWriter(bio, engine="openpyxl") as w:
+        df.to_excel(w, sheet_name="客户结算单ITO宽表缺勤", header=False, index=False)
     return bio.getvalue()
 
 
@@ -300,6 +335,37 @@ def make_mapping_excel_two_people() -> bytes:
 if __name__ == "__main__":
     mapping = make_mapping_excel()
 
+    client_wide = make_client_excel_geely_ito_wide_two_row_header()
+    parsed_wide = parse_all(
+        client_wide,
+        mapping,
+        client_filename="吉利ITO_宽表_2025年.xlsx",
+        client_id="geely_ito",
+    )
+    assert parsed_wide.client_id == "geely_ito"
+    assert list(parsed_wide.settlement.columns) == ["name", "ym", "monthly_price", "actual_days"]
+    assert len(parsed_wide.settlement) == 1
+    r_wide = parsed_wide.settlement.iloc[0]
+    assert str(r_wide["name"]).strip() == "张三"
+    assert r_wide["ym"] == (2025, 10)
+    assert abs(float(r_wide["monthly_price"]) - 31800.0) < 0.01
+    assert abs(float(r_wide["actual_days"]) - 22.0) < 0.01
+    rows_wide = build_internal_rows(parsed_wide)
+    out_wide = export_internal_xlsx(rows_wide)
+    assert out_wide[:2] == b"PK"
+
+    try:
+        parse_all(
+            make_client_excel_geely_ito_wide_missing_attendance(),
+            mapping,
+            client_filename="吉利ITO_宽表缺勤_2025年.xlsx",
+            client_id="geely_ito",
+        )
+    except ConversionError as e:
+        assert e.code == "geely_ito_wide_missing_attendance"
+    else:
+        raise AssertionError("expected ConversionError geely_ito_wide_missing_attendance")
+
     client1 = make_client_excel_geely_ito()
     parsed1 = parse_all(client1, mapping, client_filename="吉利ITO_客户结算单_2025年.xlsx", client_id="auto")
     rows1 = build_internal_rows(parsed1)
@@ -409,6 +475,7 @@ if __name__ == "__main__":
 
     print(
         "ok:",
+        f"geely_ito_wide rows={len(parsed_wide.settlement)} bytes_wide={len(out_wide)}",
         f"geely_ito rows={len(rows1)} bytes={len(out1)}",
         f"demo_alt rows={len(rows2)} bytes={len(out2)}",
         f"desay rows={len(rows3)} bytes={len(out3)}",

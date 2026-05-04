@@ -9,7 +9,7 @@ import pandas as pd
 from app.client_rules.models import ClientRule
 from app.client_rules.registry import detect_client_id_from_filename, get_rule, list_clients
 from app.services import common as cm
-from app.services.clients import Geely_ATO
+from app.services.clients import Geely_ATO, Geely_ITO
 from app.services.errors import ConversionError
 
 @dataclass(frozen=True)
@@ -151,6 +151,8 @@ def parse_client_excel(
 
     settlement.columns = [cm._normalize_col(c) for c in settlement.columns]
     settlement = cm._drop_settlement_skip_marker_rows(settlement)
+    if rule.client_id == "geely_ito" and not uses_dual_reader:
+        Geely_ITO.require_wide_attendance_if_wide_signature(settlement, sheet_name=settlement_sheet)
     if not travel.empty:
         travel.columns = [cm._normalize_col(c) for c in travel.columns]
 
